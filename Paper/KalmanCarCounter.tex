@@ -1,0 +1,182 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips13submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{mathtools}
+%\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+\title{Traffic Counting with Kalman Filters}
+
+
+\author{
+Anthony M Lozano\\
+Department of Computer Science\\
+Georgia Institute of Technology\\
+\texttt{amlozano1@gmail.com} \\
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+Counting vehicles is an important function for traffic video data analysis. This paper examines an approach of using a Shi-Tomasi corner detector with a Lucas Kanade Optical flow pyramid to create data measurements. After clustering tracked data points, a Kalman Filter is used to process the data in order to finally determine if a vehicle passes through the video. Conclusion summary here.
+\end{abstract}
+
+\section{Background/Problem Description}
+
+\paragraph*{}Good traffic data is an important for many users.  Civil Engineers need traffic data to design, construct and maintain roadways.  Policy makers use it to allocate funding for such projects, and business owners may be interested in such data when deciding where to start a new business.  The data can even be used to estimate environmental impact of roadways and perform other similar estimations.
+\paragraph*{}The data is useful, but existing methods for capturing the data seem more expensive and or cumbersome then they ought to be.  The chief problems of current solutions are portability, setup time, or need for humans to process the data.  Portability might not be an issue for areas where traffic data will need to be collected permanently, but usually agencies want a system that can move easily to take measurements from many sites.  Some examples of not so portable systems include inductive loop sensors installed into the roadway itself, or the TRAX Stealth Stud, which is another device that needs to be installed into the pavement.  Installing these devices requires closing the road, which is not ideal as many urban areas will suffer major disruption from even a relatively short road closure.  Pneumatic loop sensors, which look like small black tubes that are laid perpendicularly over the road, are an effective solution, but some jurisdictions in the United States require that workers close the road when they are putting these up anyway for safety reasons.  Other systems use a camera and a human to count the cars going by, but while this produces very accurate data it is time consuming.  Humans need to check and recheck their counts, and sometimes vehicle classifications are subjective.  These systems and devices are also expensive, costing thousands of dollars for a single unit or many man hours of labor.
+\paragraph{} This paper attempts to create a software analysis tool that can perform one of the most basic tasks for traffic data collection; counting how many cars have gone in a particular direction in a video. This software tool would anyone with a camera and a decent vantage point can collect and contribute to traffic data collection efforts. 
+
+\section{Hypothesis and Project Approach}
+\label{headings}
+\paragraph{}Our hypothesis is that computer vision techniques for tracking motion in video combined with a Kalman Filter should be able to track vehicles and plot their movements. The software will then record the starting and ending points of each successfully tracked vehicle, thus establishing counts for each origin and destination.
+
+\paragraph*{} 
+
+\section{Implementation Details}
+\label{headings}
+\paragraph{}The Kalman Car Counter program will need to perform five major tasks to enable counting of vehicles. These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
+\subsection{Background Subtraction}
+Background substraction is the process of removing noise and unmoving sections of an image.  The Kalman Car Counter uses the simple process of frame differencing to remove the background for speed. Frame difference at a time $t$ can be calculated as 
+$ D(t+1) = V(x,y,t+1) - V(x,y,t) $ for each pixel $(x,y)$.\cite{Birgi09} 
+
+
+\section{Technical Specifications}
+\label{headings}
+
+\paragraph{}OpenCV (Open Source Computer Vision Library) is an open source computer vision and machine learning software library. It contains many optimized and state-of-the art algorithms of particular use to this project. In
+
+\subsection{Citations within the text}
+
+Citations within the text should be numbered consecutively. The corresponding
+number is to appear enclosed in square brackets, such as [1] or [2]-[5]. The
+corresponding references are to be listed in the same order at the end of the
+paper, in the \textbf{References} section. (Note: the standard
+\textsc{Bib\TeX} style \texttt{unsrt} produces this.) As to the format of the
+references themselves, any style is acceptable as long as it is used
+consistently.
+
+As submission is double blind, refer to your own published work in the 
+third person. That is, use ``In the previous work of Jones et al.\ [4]'',
+not ``In our previous work [4]''. If you cite your other papers that
+are not widely available (e.g.\ a journal paper under review), use
+anonymous author names in the citation, e.g.\ an author of the
+form ``A.\ Anonymous''. 
+
+
+\subsection{Footnotes}
+
+Indicate footnotes with a number\footnote{Sample of the first footnote} in the
+text. Place the footnotes at the bottom of the page on which they appear.
+Precede the footnote with a horizontal rule of 2~inches
+(12~picas).\footnote{Sample of the second footnote}
+
+\subsection{Figures}
+
+All artwork must be neat, clean, and legible. Lines should be dark
+enough for purposes of reproduction; art work should not be
+hand-drawn. The figure number and caption always appear after the
+figure. Place one line space before the figure caption, and one line
+space after the figure. The figure caption is lower case (except for
+first word and proper nouns); figures are numbered consecutively.
+
+Make sure the figure caption does not get separated from the figure.
+Leave sufficient space to avoid splitting the figure and figure caption.
+
+You may use color figures. 
+However, it is best for the
+figure captions and the paper body to make sense if the paper is printed
+either in black/white or in color.
+\begin{figure}[h]
+\begin{center}
+%\framebox[4.0in]{$\;$}
+\fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
+\end{center}
+\caption{Sample figure caption.}
+\end{figure}
+
+\subsection{Tables}
+
+All tables must be centered, neat, clean and legible. Do not use hand-drawn
+tables. The table number and title always appear before the table. See
+Table~\ref{sample-table}.
+
+Place one line space before the table title, one line space after the table
+title, and one line space after the table. The table title must be lower case
+(except for first word and proper nouns); tables are numbered consecutively.
+
+\begin{table}[t]
+\caption{Sample table title}
+\label{sample-table}
+\begin{center}
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\bf PART}  &\multicolumn{1}{c}{\bf DESCRIPTION}
+\\ \hline \\
+Dendrite         &Input terminal \\
+Axon             &Output terminal \\
+Soma             &Cell body (contains cell nucleus) \\
+\end{tabular}
+\end{center}
+\end{table}
+
+\section{Analysis of Results}
+Do not change any aspects of the formatting parameters in the style files.
+In particular, do not modify the width or length of the rectangle the text
+should fit into, and do not change font sizes (except perhaps in the
+\textbf{References} section; see below). Please note that pages should be
+numbered.
+
+\section{Conclusion}
+
+Please prepare PostScript or PDF files with paper size ``US Letter'', and
+not, for example, ``A4''. The -t
+letter option on dvips will produce US Letter files.
+
+Fonts were the main cause of problems in the past years. Your PDF file must
+only contain Type 1 or Embedded TrueType fonts. Here are a few instructions
+to achieve this.
+
+\subsubsection*{References}
+
+References follow the acknowledgments. Use unnumbered third level heading for
+the references. Any choice of citation style is acceptable as long as you are
+consistent. It is permissible to reduce the font size to `small' (9-point) 
+when listing the references. {\bf Remember that this year you can use
+a ninth page as long as it contains \emph{only} cited references.}
+
+\small{
+[1] Alexander, J.A. \& Mozer, M.C. (1995) Template-based algorithms
+for connectionist rule extraction. In G. Tesauro, D. S. Touretzky
+and T.K. Leen (eds.), {\it Advances in Neural Information Processing
+Systems 7}, pp. 609-616. Cambridge, MA: MIT Press.
+
+[2] Bower, J.M. \& Beeman, D. (1995) {\it The Book of GENESIS: Exploring
+Realistic Neural Models with the GEneral NEural SImulation System.}
+New York: TELOS/Springer-Verlag.
+
+[3] Hasselmo, M.E., Schnell, E. \& Barkai, E. (1995) Dynamics of learning
+and recall at excitatory recurrent synapses and cholinergic modulation
+in rat hippocampal region CA3. {\it Journal of Neuroscience}
+{\bf 15}(7):5249-5262.
+}
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{KalmanBib}
+\end{document}
