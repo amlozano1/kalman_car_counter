@@ -48,16 +48,54 @@ Counting vehicles is an important function for traffic video data analysis. This
 \label{headings}
 \paragraph{}Our hypothesis is that computer vision techniques for tracking motion in video combined with a Kalman Filter should be able to track vehicles and plot their movements. The software will then record the starting and ending points of each successfully tracked vehicle, thus establishing counts for each origin and destination.
 
-\paragraph*{} 
 
 \section{Implementation Details}
 \label{headings}
 \paragraph{}The Kalman Car Counter program will need to perform five major tasks to enable counting of vehicles. These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
 \subsection{Background Subtraction}
 Background substraction is the process of removing noise and unmoving sections of an image.  The Kalman Car Counter uses the simple process of frame differencing to remove the background for speed. Frame difference at a time $t$ can be calculated as 
-$ D(t+1) = V(x,y,t+1) - V(x,y,t) $ for each pixel $(x,y)$.\cite{Birgi09} 
+$ D(t+1) = V(x,y,t+1) - V(x,y,t) $ for each pixel $(x,y)$. \cite{Birgi09}
+This calculation will allow the subsequent algorithms to focus solely on areas of the video that contain motion, helping isolate vehicles and removing noise.
 
+\subsection{Feature Detection}
+Feature detection is the process of finding good features of an image for tracking. For vehicle tracking, Shi-Tomasi corner detection is a solid algorithm choice that expands on standard Harris corner detection. Briefly, the algorithm works as follows: If we can assume the time between frames is small, we can describe the changes between them as image motion. If a we take a patch of an image defined by $(u,v)$ and shift it by $(x,y)$, the weighted sum of squared differences between the two patches, $S$ is given by \\*
+\\*
+$ S(x,y) = \sum\limits_{u}\sum\limits_{v}w(u,v)(I(u+x, v+y) - I(u,v))^2$ \\*
+\\*
+$I(u+x,v+y)$ can be approximated bu a Taylor expansion with $I_x,$ and $I_y$ being the partial derivatives of $I$ such that:\\*
+\\*
+$I(u+x,v+y)) \approx I(u,v) (I_x(u,v) x+I_y(u,v) y)^2$\\*
+\\*
+Which produces the approximation\\*
+\\*
+$S(x,y) \approx \sum\limits_{u}\sum\limits_{v}w(u,v) (I_x(u,v) x+I_y(u,v) y)^2$\\*
+which in matrix form is\\*
+\\*
+$S(x,y) \approx \left(\begin{smallmatrix}
+x & y
+\end{smallmatrix}\right) A
+\left(\begin{smallmatrix}
+x\\
+y
+\end{smallmatrix}\right)$\\*
+\\*
+Where $A$ is the structure tensor\\*
+\\*
+$
+A = \sum_u \sum_v w(u,v) 
+\begin{bmatrix}
+I_x^2 & I_x I_y \\
+I_x I_y & I_y^2 
+\end{bmatrix}
+=
+\begin{bmatrix}
+\langle I_x^2 \rangle & \langle I_x I_y \rangle\\
+\langle I_x I_y \rangle & \langle I_y^2 \rangle
+\end{bmatrix}$\\*
+\\*
+A corner is then found if $S$ has a large variation in all directions of the vector $\begin{pmatrix} x & y \end{pmatrix}$. Thus, if $A$ has two positive eigenvalues that are large in comparison to other eigenvalues, a corner is found. \cite{tommasini1998making} The Shi-Tomasi takes a practical shortcut and only calculates $min(\lambda_1, \lambda_2)$ rather than doing a complete eigenvalue decomposition. \cite{Shi94}
 
+\subsection{Optical Flow}
 \section{Technical Specifications}
 \label{headings}
 
