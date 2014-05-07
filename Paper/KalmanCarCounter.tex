@@ -35,14 +35,14 @@ Georgia Institute of Technology\\
 \maketitle
 
 \begin{abstract}
-Counting vehicles is an important function for traffic video data analysis. This paper examines an approach of using a Shi-Tomasi corner detector with a Lucas Kanade Optical flow pyramid to create data measurements. After clustering tracked data points, a Kalman Filter is used to process the data in order to finally determine if a vehicle passes through the video. Conclusion summary here.
+Counting vehicles is an important function for traffic video data analysis. This paper examines an approach of using a Shi-Tomasi corner detector with a Lucas Kanade Optical flow pyramid to create data measurements. After clustering tracked data measurements, a Kalman Filter is used to process the data in order to finally determine if a vehicle passes through the video. Our implementation of this method shows some success, but needs refinement.
 \end{abstract}
 
 \section{Background/Problem Description}
 
 \paragraph*{}Good traffic data is an important for many users.  Civil Engineers need traffic data to design, construct and maintain roadways.  Policy makers use it to allocate funding for such projects, and business owners may be interested in such data when deciding where to start a new business.  The data can even be used to estimate environmental impact of roadways and perform other similar estimations.
 \paragraph*{}The data is useful, but existing methods for capturing the data seem more expensive and or cumbersome then they ought to be.  The chief problems of current solutions are portability, setup time, or need for humans to process the data.  Portability might not be an issue for areas where traffic data will need to be collected permanently, but usually agencies want a system that can move easily to take measurements from many sites.  Some examples of not so portable systems include inductive loop sensors installed into the roadway itself, or the TRAX Stealth Stud, which is another device that needs to be installed into the pavement.  Installing these devices requires closing the road, which is not ideal as many urban areas will suffer major disruption from even a relatively short road closure.  Pneumatic loop sensors, which look like small black tubes that are laid perpendicularly over the road, are an effective solution, but some jurisdictions in the United States require that workers close the road when they are putting these up anyway for safety reasons.  Other systems use a camera and a human to count the cars going by, but while this produces very accurate data it is time consuming.  Humans need to check and recheck their counts, and sometimes vehicle classifications are subjective.  These systems and devices are also expensive, costing thousands of dollars for a single unit or many man hours of labor.
-\paragraph{} This paper attempts to create a software analysis tool that can perform one of the most basic tasks for traffic data collection; counting how many cars have gone in a particular direction in a video. This software tool would anyone with a camera and a decent vantage point can collect and contribute to traffic data collection efforts. 
+\paragraph{} This paper attempts to create a software analysis tool that can perform one of the most basic tasks for traffic data collection; counting how many cars have gone in a particular direction in a video. This software tool would enable anyone with a camera and a decent vantage point can collect and contribute to traffic data collection efforts. 
 
 \section{Hypothesis and Project Approach}
 \label{headings}
@@ -51,14 +51,14 @@ Counting vehicles is an important function for traffic video data analysis. This
 
 \section{Implementation Details}
 \label{headings}
-\paragraph{}The Kalman Car Counter program will need to perform five major tasks to enable counting of vehicles. These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
+\paragraph{}The Kalman Car Counter program will need to perform six major tasks to enable counting of vehicles. These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
 \subsection{Background Subtraction}
 Background substraction is the process of removing noise and unmoving sections of an image.  The Kalman Car Counter uses the simple process of frame differencing to remove the background for speed. Frame difference at a time $t$ can be calculated as 
 $ D(t+1) = V(x,y,t+1) - V(x,y,t) $ for each pixel $(x,y)$. \cite{Birgi09}
-This calculation will allow the subsequent algorithms to focus solely on areas of the video that contain motion, helping isolate vehicles and removing noise.
+This calculation will allow the subsequent algorithms to focus solely on areas of the video that contain motion, helping isolate vehicles and removing image noise.
 
 \subsection{Feature Detection}
-Feature detection is the process of finding good features of an image for tracking. For vehicle tracking, Shi-Tomasi corner detection is a solid algorithm choice that expands on standard Harris corner detection. Briefly, the algorithm works as follows: If we can assume the time between frames is small, we can describe the changes between them as image motion. If a we take a patch of an image defined by $(u,v)$ and shift it by $(x,y)$, the weighted sum of squared differences between the two patches, $S$ is given by \\*
+Feature detection is the process of finding good features of an image for tracking. For vehicle tracking, Shi-Tomasi corner detection is a solid algorithm choice that expands on standard Harris corner detection. It will allow us to zero in on the "corners" of vehicles. Briefly, the algorithm works as follows: If we can assume the time between frames is small, we can describe the changes between them as image motion. If a we take a patch of an image defined by $(u,v)$ and shift it by $(x,y)$, the weighted sum of squared differences between the two patches, $S$ is given by \\*
 \\*
 $ S(x,y) = \sum\limits_{u}\sum\limits_{v}w(u,v)(I(u+x, v+y) - I(u,v))^2$ \\*
 \\*
@@ -93,127 +93,113 @@ I_x I_y & I_y^2
 \langle I_x I_y \rangle & \langle I_y^2 \rangle
 \end{bmatrix}$\\*
 \\*
-A corner is then found if $S$ has a large variation in all directions of the vector $\begin{pmatrix} x & y \end{pmatrix}$. Thus, if $A$ has two positive eigenvalues that are large in comparison to other eigenvalues, a corner is found. \cite{tommasini1998making} The Shi-Tomasi takes a practical shortcut and only calculates $min(\lambda_1, \lambda_2)$ rather than doing a complete eigenvalue decomposition. \cite{Shi94}
+A corner is then found if $S$ has a large variation in all directions of the vector $\begin{pmatrix} x & y \end{pmatrix}$. Thus, if $A$ has two positive eigenvalues that are large in comparison to other eigenvalues, a corner is found. \cite{tommasini1998making} The Shi-Tomasi corner detector takes a practical shortcut and only calculates $min(\lambda_1, \lambda_2)$ rather than doing a complete eigenvalue decomposition in the interest of speed and because this is sufficient to find features with great accuracy. \cite{Shi94}
 
 \subsection{Optical Flow}
+Once we have determined what features in the image to track, we actually need to track them. To accomplish this, the Kalman Car Counter will use another well known algorithm, the Lucas-Kanade method. This method assumes that pixels move a small amount between frames, and the movement of the pixels is approximatly the same for all pixels in the neighborhood of a point $p$. \cite{lucas1981iterative}. Therefore, the optical flow equation should hold for all pixels in a window centered at $p$. This means the local velocity of a feature $(V_x,V_y)$ must satisfy the equations:\\*\\*
+$I_x(q_1) V_x + I_y (q_1) V_y = -I_t(q_1)$\\*
+$I_x(q_2) V_x + I_y (q_2) V_y = -I_t(q_2)$\\*
+$\vdots$\\*
+$I_x(q_n) V_x + I_y (q_n) V_y = -I_t(q_n)$\\*\\*
+where $q_1,q_2,\dots,q_n$ are the pixels around a feature inside the window and $I_x(q_i),I_y(q_i),I_t(q_i)$ are the partial derivatives if the image $I$ with respect to position and time $x,y,$ and $t$
+
+This system of equations can be written in the matrix form:\\*\\*
+$A = \begin{bmatrix}
+I_x(q_1) & I_y(q_1) \\[10pt]
+I_x(q_2) & I_y(q_2) \\[10pt]
+\vdots  & \vdots  \\[10pt]
+I_x(q_n) & I_y(q_n) 
+\end{bmatrix},
+\quad\quad
+v = 
+\begin{bmatrix}
+V_x\\[10pt]
+V_y
+\end{bmatrix},
+\quad \mbox{and}\quad
+b = 
+\begin{bmatrix}
+-I_t(q_1) \\[10pt]
+-I_t(q_2) \\[10pt]
+\vdots  \\[10pt]
+-I_t(q_n)
+\end{bmatrix}
+$\\*
+
+This overdetermined system is solved with a compromise solution by the least squares principle, solving the 2x2 system:\\*\\*
+$A^T A v=A^T b$\\*\\*
+Bouguet presents a pyramidal implementation of the Lucase Kanade tracker\cite{bouguet2001pyramidal}, which is the particular implementation that the Kalman Car Counter uses. If the Lucas-Kanade tracker tracks the features detected in the previous step successfully, we can use those features as data points for our Kalman Filter.
+
+\subsection{Optical Flow Data Clustering}
+The Lucas-Kande tracker can return many successfully tracked features for a single vehicle. We can leverage this by clustering the tracked features to combine them into a single point. Because we cannot predict how many vehicles will be in a frame, we use a agglomerative hierarchical clustering scheme. We use cophenetic distance $t$ as a criterion for automatic clustering of the data, expecting different vehicle feature clusters to have a large distance between them. Once the data is clustered, the means of each cluster that has at least $n$ elements is assigned to a Kalman Filter.
+\subsection{Hungarian Algorithm}
+Once each cluster's mean has been established, we intend to again track each cluster, but this time using a Kalman Filter (described below) in order to be more tolerate to noise, occlusion and merged clusters. Thus, each cluster must be assigned to a Kalman filter. For each existing Kalman filter, we attempt to assign the nearest cluster to that filter for measurement updates. In order so solve the assignment problem here, we use the Kuhn-Munkres, or simply Munkres algorithm. \cite{munkres1957algorithms} It solves a cost matrix where $a1$ would be the distance from a cluster mean $a$ to a Kalman Filter's next prediction $1$:\\*\\*
+$\begin{bmatrix}
+a1 & a2 & a3 & a4\\
+b1 & b2 & b3 & b4\\
+c1 & c2 & c3 & c4\\
+d1 & d2 & d3 & d4\end{bmatrix}$\\*\\*
+Solving this cost matrix for the minimum cost produces assignments for each cluster. If the algorithm assigns a cluster to a Kalman filter, it is used as a measurement update for that Kalman filter for the frame. Note that this matrix can be rectangular; there could be more clusters than Kalman filters or more Kalman filters than clusters. If there are more Kalman filters than clusters, Kalman filters that do not get an assignment are marked as "Lost" and do not receive a measurement update. Lost Kalman filters accumulate a Loss Counter each subsequent frame they are lost in until they are either deleted or are again assigned to a cluster.  On the other hand, if there are more clusters than Kalman Filters, a new Kalman filter is created for each new cluster, instantiated with initial position equal to the cluster mean.
+
+\subsection{Kalman Filter}
+The final step solves a practical problem: even with all the previous steps, our measurements, the mean value of each cluster, are still somewhat noisy measurements of the vehicles location in the video. In order to better track the vehicles, we pass the measurements through a Kalman filter. The filter allows us to track vehicles even if vehicles' measurements are noisy, vehicles are temporarily occluded, or vehicles' clusters merge. \\*
+The Kalman filter requires several matrices, the most important of which is the next state function. This Kalman filter will model the motion of the vehicles using a simple system $F$ of $(x,y)$ position and velocity. \\*
+\\*
+$F = \begin{bmatrix}
+1 & 0 & dt & 0\\
+0 & 1 & 0 & dt\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\end{bmatrix}$\\*\\*
+Read in simple English, this matrix means that the next state's position should be estimated using the prior position and velocity multiplied by the change in time. The change in time is set to the amount of seconds between each frame of the video. For example, in a 30 frames-per-second video, $dt$ would be .5 seconds.
+Each Kalman filter will have it's initial state simple set to the mean of the cluster $(x,y)$ that created it with no initial velocity, that is $V_x = 0$ and $V_y = 0$.\\*
+$X = \begin{bmatrix}
+x \\
+y \\
+0 \\
+0 \end{bmatrix}$\\*\\*
+Our measurement update function will be \\*\\*
+$H = \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+0 & 0 \\
+0 & 0 \end{bmatrix}$\\*\\*
+Since we can measure $x$ and $y$ but not $V_x$ or $V_y$\\*
+The uncertainty for the velocity will be set very high, while the uncertainty for position will be set relatively low.\\*
+$R = \begin{bmatrix}
+ 1 & 0 & 0 & 0\\
+ 0 & 1 & 0 & 0\\
+ 0 & 0 & 1000 & 0\\
+ 0 & 0 & 0 & 1000\end{bmatrix}$
+
+The Kalman filter performs prediction step and calculates the posterior position $X'$:\\*\\* 
+$X' = FX+u$\\*\\*
+and it updates uncertainty by:\\*\\*
+$P' = F \cdot P \cdot F^T$\\*\\*
+Similarly, after each prediction step, a measurement update step must be performed with a new measurement $Z$.\\*\\*
+$Y = Z - H \cdot X\\*
+ S = H \cdot P \cdot H^T + R\\*
+ K = P \cdot H^T \cdot S^{-1} \\*
+ X' = X + (K\cdot Y)\\*
+ P' = (I - K \cdot H) \cdot P $\\*\\*
+ With these two steps iterating every frame, we track each vehicles starting location to ending location. With the tracked vehicle starting and ending positions in hand, we can count vehicles entering the scene and leaving the scene.
 \section{Technical Specifications}
 \label{headings}
 
-\paragraph{}OpenCV (Open Source Computer Vision Library) is an open source computer vision and machine learning software library. It contains many optimized and state-of-the art algorithms of particular use to this project. In
-
-\subsection{Citations within the text}
-
-Citations within the text should be numbered consecutively. The corresponding
-number is to appear enclosed in square brackets, such as [1] or [2]-[5]. The
-corresponding references are to be listed in the same order at the end of the
-paper, in the \textbf{References} section. (Note: the standard
-\textsc{Bib\TeX} style \texttt{unsrt} produces this.) As to the format of the
-references themselves, any style is acceptable as long as it is used
-consistently.
-
-As submission is double blind, refer to your own published work in the 
-third person. That is, use ``In the previous work of Jones et al.\ [4]'',
-not ``In our previous work [4]''. If you cite your other papers that
-are not widely available (e.g.\ a journal paper under review), use
-anonymous author names in the citation, e.g.\ an author of the
-form ``A.\ Anonymous''. 
+The Kalman Car Tracker has been implemented in the Python programming language. This implementation uses several technologies to accomplish it's task. The foremost is OpenCV (Open Source Computer Vision Library), an open source computer vision and machine learning software library. It contains many optimized and state-of-the art algorithms of use to this project with Python bindings. In particular, the background subtraction, Shi-Tomasi corner detection, Lucas-Kanade optical flow tracking, and Kalman filteings all come from the OpenCV library. The hierarchical data clustering algorithm comes from another powerful Python library known as SciPy. Munkres linear assignment comes from a Python library by Lars Buitinck.
+\paragraph{}To test this method, a dataset was captured with a cellphone camera on a highway overpass. A video was recorded from the center of the overpass overlooking the freeway at a resolution of 1080p for three minutes. The overpass vibrated, introducing much noise for our particular background subtraction method. In addition, the camera was held in hand; no tripod or other stabilization was used to record video.
+\paragraph{}The video processing took approximately 15 minutes for 3 minutes of video on a Intel i7 960 CPU @ 3.20 GHz.
 
 
-\subsection{Footnotes}
-
-Indicate footnotes with a number\footnote{Sample of the first footnote} in the
-text. Place the footnotes at the bottom of the page on which they appear.
-Precede the footnote with a horizontal rule of 2~inches
-(12~picas).\footnote{Sample of the second footnote}
-
-\subsection{Figures}
-
-All artwork must be neat, clean, and legible. Lines should be dark
-enough for purposes of reproduction; art work should not be
-hand-drawn. The figure number and caption always appear after the
-figure. Place one line space before the figure caption, and one line
-space after the figure. The figure caption is lower case (except for
-first word and proper nouns); figures are numbered consecutively.
-
-Make sure the figure caption does not get separated from the figure.
-Leave sufficient space to avoid splitting the figure and figure caption.
-
-You may use color figures. 
-However, it is best for the
-figure captions and the paper body to make sense if the paper is printed
-either in black/white or in color.
-\begin{figure}[h]
-\begin{center}
-%\framebox[4.0in]{$\;$}
-\fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-\end{center}
-\caption{Sample figure caption.}
-\end{figure}
-
-\subsection{Tables}
-
-All tables must be centered, neat, clean and legible. Do not use hand-drawn
-tables. The table number and title always appear before the table. See
-Table~\ref{sample-table}.
-
-Place one line space before the table title, one line space after the table
-title, and one line space after the table. The table title must be lower case
-(except for first word and proper nouns); tables are numbered consecutively.
-
-\begin{table}[t]
-\caption{Sample table title}
-\label{sample-table}
-\begin{center}
-\begin{tabular}{ll}
-\multicolumn{1}{c}{\bf PART}  &\multicolumn{1}{c}{\bf DESCRIPTION}
-\\ \hline \\
-Dendrite         &Input terminal \\
-Axon             &Output terminal \\
-Soma             &Cell body (contains cell nucleus) \\
-\end{tabular}
-\end{center}
-\end{table}
 
 \section{Analysis of Results}
-Do not change any aspects of the formatting parameters in the style files.
-In particular, do not modify the width or length of the rectangle the text
-should fit into, and do not change font sizes (except perhaps in the
-\textbf{References} section; see below). Please note that pages should be
-numbered.
+In first half of the sample video on the left (oncoming) lanes of traffic, 24/35 , or about 68\%, of vehicles were successfully tracked. Our definition of successfully tracked is that Kalman filter tracking the car was assigned for at least the last 6 frames of the car being in the image. Having the car successfully tracked when it leaves the frame would be sufficient to count the car as having flowed under the overpass.  While clearly there is room for improvement, this shows the method implemented in this tool can successfully track vehicles and perform the counting task. The parameters for various methods were not optimized, and the tool is far from complete, but these preliminary results seem promising. Perhaps with optimization and refinement this method could be used as envisioned to enabled simple unattended capture of traffic data.\\*
+
 
 \section{Conclusion}
 
-Please prepare PostScript or PDF files with paper size ``US Letter'', and
-not, for example, ``A4''. The -t
-letter option on dvips will produce US Letter files.
+In this paper, we present a method for collecting traffic data using a simple camera and computer vision processing, even in the presence of occlusion and . The method needs refinement, but can successfully track vehicles. This method seems to have trouble differentiating between clusters of tracked optical flows when they are tightly packed, which could prove a large problem for dense traffic flows. This problem might be solved with a better camera perspective, but the best camera perspectives, such as top down, make the detection process much more trivial and come with disadvantages similar to those provided in the introduction: they are costly and hard to set up. Exploring other options for clustering might help alleviate this issue.
+\paragraph{}
 
-Fonts were the main cause of problems in the past years. Your PDF file must
-only contain Type 1 or Embedded TrueType fonts. Here are a few instructions
-to achieve this.
-
-\subsubsection*{References}
-
-References follow the acknowledgments. Use unnumbered third level heading for
-the references. Any choice of citation style is acceptable as long as you are
-consistent. It is permissible to reduce the font size to `small' (9-point) 
-when listing the references. {\bf Remember that this year you can use
-a ninth page as long as it contains \emph{only} cited references.}
-
-\small{
-[1] Alexander, J.A. \& Mozer, M.C. (1995) Template-based algorithms
-for connectionist rule extraction. In G. Tesauro, D. S. Touretzky
-and T.K. Leen (eds.), {\it Advances in Neural Information Processing
-Systems 7}, pp. 609-616. Cambridge, MA: MIT Press.
-
-[2] Bower, J.M. \& Beeman, D. (1995) {\it The Book of GENESIS: Exploring
-Realistic Neural Models with the GEneral NEural SImulation System.}
-New York: TELOS/Springer-Verlag.
-
-[3] Hasselmo, M.E., Schnell, E. \& Barkai, E. (1995) Dynamics of learning
-and recall at excitatory recurrent synapses and cholinergic modulation
-in rat hippocampal region CA3. {\it Journal of Neuroscience}
-{\bf 15}(7):5249-5262.
-}
 \nocite{*}
 \bibliographystyle{plain}
 \bibliography{KalmanBib}
