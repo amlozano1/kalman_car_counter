@@ -1,10 +1,24 @@
-\documentclass{article} % For LaTeX2e
+\documentclass[draft]{article} % For LaTeX2e
 \usepackage{nips13submit_e,times}
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{mathtools}
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
+
+% % % % % % % % % % % % % % % % % % % % % % % % %
+% Justin additions							    %
+%===============================================%
+% Remove the [draft] on line 1 to hide my shit  %
+% % % % % % % % % % % % % % % % % % % % % % % % %
+
+\usepackage{ifdraft}
+
+\newcommand{\justin}[1]{\ifdraft{\textcolor{red}{\textbf{#1}}}{}}
+
+% % % % % % % % % % % % % % % % % % % % % % % % %
+% End Justin additions							%
+% % % % % % % % % % % % % % % % % % % % % % % % %
 
 \title{Traffic Counting with Kalman Filters}
 
@@ -31,7 +45,6 @@ Georgia Institute of Technology\\
 
 \begin{document}
 
-
 \maketitle
 
 \begin{abstract}
@@ -39,21 +52,31 @@ Counting vehicles is an important function for traffic video data analysis. This
 \end{abstract}
 
 \section{Background/Problem Description}
+\label{sec:background}
 
-\paragraph*{}Good traffic data is an important for many users.  Civil Engineers need traffic data to design, construct and maintain roadways.  Policy makers use it to allocate funding for such projects, and business owners may be interested in such data when deciding where to start a new business.  The data can even be used to estimate environmental impact of roadways and perform other similar estimations.
-\paragraph*{}The data is useful, but existing methods for capturing the data seem more expensive and or cumbersome then they ought to be.  The chief problems of current solutions are portability, setup time, or need for humans to process the data.  Portability might not be an issue for areas where traffic data will need to be collected permanently, but usually agencies want a system that can move easily to take measurements from many sites.  Some examples of not so portable systems include inductive loop sensors installed into the roadway itself, or the TRAX Stealth Stud, which is another device that needs to be installed into the pavement.  Installing these devices requires closing the road, which is not ideal as many urban areas will suffer major disruption from even a relatively short road closure.  Pneumatic loop sensors, which look like small black tubes that are laid perpendicularly over the road, are an effective solution, but some jurisdictions in the United States require that workers close the road when they are putting these up anyway for safety reasons.  Other systems use a camera and a human to count the cars going by, but while this produces very accurate data it is time consuming.  Humans need to check and recheck their counts, and sometimes vehicle classifications are subjective.  These systems and devices are also expensive, costing thousands of dollars for a single unit or many man hours of labor.
-\paragraph{} This paper attempts to create a software analysis tool that can perform one of the most basic tasks for traffic data collection; counting how many cars have gone in a particular direction in a video. This software tool would enable anyone with a camera and a decent vantage point can collect and contribute to traffic data collection efforts. 
+\justin{labels should be unique so you can reference them later eg Background is in Section \ref{sec:background}. (look at the source).}
+
+Good traffic data is an important for many users.  Civil Engineers need traffic data to design, construct and maintain roadways.  Policy makers use it to allocate funding for such projects, and business owners may be interested in such data when deciding where to start a new business.  The data can even be used to estimate environmental impact of roadways and perform other similar estimations.
+
+The data is useful, but existing methods for capturing the data seem more expensive and or cumbersome then they ought to be. \justin{Previous sentence should probably be more concrete - they don't seem that way, they \textit{are} that way.}  The chief problems of current solutions are portability, setup time, or need for humans to process the data.  \justin{and need for humans...}  Portability might not be an issue for areas where traffic data will need to be collected permanently, but usually agencies want a system that can move easily to take measurements from many sites. \justin{While portability is not an issue in more permanent sensor deployments, there lacks a temporary solution for ad-hoc data collection}.  Some examples of not so portable \justin{less portable sounds better to me} systems include inductive loop sensors installed into the roadway itself, or the TRAX Stealth Stud, which is another device that needs to be installed into the pavement.  Installing these devices requires closing the road, which is not ideal as many urban areas will suffer major disruption from even a relatively short road closure. \justin{...is not ideal in situations where even a relatively short road closure may cause major disruptions, such as urban areas.}  Pneumatic loop sensors, which look like small black tubes that are laid perpendicularly over the road, are an effective solution, but some jurisdictions in the United States require that workers close the road when they are putting these up anyway for safety reasons. \justin{you have a wicked comma splice back there son.}  Other systems use a camera and a human to count the cars going by, but while this produces very accurate data it is time consuming. \justin{Other systems use a human-operated camera to track vehicles as they pass, producing extremely accurate data with the caveat of being labor intensive and time consuming.}  Humans need to check and recheck their counts, and sometimes vehicle classifications are subjective. \justin{This sentence lacks context. State that they are problems.}  These systems and devices are also expensive, costing thousands of dollars for a single unit or many man hours of labor. \justin{to purchase and operate a single unit.}
+
+This paper attempts to create a software analysis tool that can perform one of the most basic tasks for traffic data collection; counting how many cars have gone in a particular direction in a video. This software tool would enable anyone with a camera and a decent vantage point can collect and contribute to traffic data collection efforts. 
 
 \section{Hypothesis and Project Approach}
-\label{headings}
-\paragraph{}Our hypothesis is that computer vision techniques for tracking motion in video combined with a Kalman Filter should be able to track vehicles and plot their movements. The software will then record the starting and ending points of each successfully tracked vehicle, thus establishing counts for each origin and destination.
+\label{sec:hypothesis}
+
+Our hypothesis is that computer vision techniques for tracking motion in video combined with a Kalman Filter should be able to track vehicles and plot their movements. The software will then record the starting and ending points of each successfully tracked vehicle, thus establishing counts for each origin and destination. \justin{consider removing the "our hypothesis" and just state that Motion tracking computer vision techniques combined with...can track vehicles. Don't say should be - be concrete.}
 
 
 \section{Implementation Details}
-\label{headings}
-\paragraph{}The Kalman Car Counter program will need to perform six major tasks to enable counting of vehicles. These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
+\label{sec:implementation}
+
+The Kalman Car Counter program will need to perform six major tasks to enable counting of vehicles. \justin{"count vehicles." sounds too weird.} These tasks are background subtraction (or foreground detection), feature detection, optical flow estimation, optical flow clustering, and finally Kalman Filtering.
+
 \subsection{Background Subtraction}
-Background substraction is the process of removing noise and unmoving sections of an image.  The Kalman Car Counter uses the simple process of frame differencing to remove the background for speed. Frame difference at a time $t$ can be calculated as 
+\label{subsec:back_subract}
+
+Background subtraction is the process of removing noise and unmoving sections of an image.  The Kalman Car Counter uses the simple process of frame differencing to remove the background for speed. Frame difference at a time $t$ can be calculated as 
 $ D(t+1) = V(x,y,t+1) - V(x,y,t) $ for each pixel $(x,y)$. \cite{Birgi09}
 This calculation will allow the subsequent algorithms to focus solely on areas of the video that contain motion, helping isolate vehicles and removing image noise.
 
